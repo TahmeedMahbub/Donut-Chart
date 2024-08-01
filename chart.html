@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Document</title>
+    <style>
+        .chart-container {
+            display: inline-block;
+            width: 33%;
+            vertical-align: top;
+        }
+
+        .highcharts-figure,
+        .highcharts-data-table table {
+            min-width: 300px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .custom-tooltip-donut {
+            position: absolute;
+            pointer-events: none;
+            font-size: 16px;
+            color: #333;
+            background: none;
+            padding: 10px;
+            border-radius: 5px;
+            /* color: #0E6C0E; */
+        }
+    </style>
+</head>
+<body>
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/highcharts-more.js"></script>
+    <script src="https://code.highcharts.com/modules/solid-gauge.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/modules/export-data.js"></script>
+    <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+
+    <div class="chart-container">
+        <figure class="highcharts-figure">
+            <div id="with-updated-baseline-donut"></div>
+        </figure>
+        <div id="with-updated-baseline-custom-tooltip" class="custom-tooltip-donut"></div>
+        Baseline With Updated Data: 91 Indicators
+    </div>
+
+    <div class="chart-container">
+        <figure class="highcharts-figure">
+            <div id="without-updated-baseline-donut"></div>
+        </figure>
+        <div id="without-updated-baseline-custom-tooltip" class="custom-tooltip-donut"></div>
+    </div>
+
+    <div class="chart-container">
+        <figure class="highcharts-figure">
+            <div id="no-baseline-donut"></div>
+        </figure>
+        <div id="no-baseline-custom-tooltip" class="custom-tooltip-donut"></div>
+    </div>
+
+    <script>
+        function renderIcons() {
+            this.series.forEach(series => {
+                if (!series.icon) {
+                    series.icon = this.renderer
+                        .text(
+                            `<i class="fa fa-${series.options.custom.icon}"></i>`,
+                            0,
+                            0,
+                            true
+                        )
+                        .attr({
+                            zIndex: 10
+                        })
+                        .css({
+                            color: series.options.custom.iconColor,
+                            fontSize: '1.5em'
+                        })
+                        .add();
+                }
+                series.icon.attr({
+                    x: this.chartWidth / 2 - 15,
+                    y: this.plotHeight / 2 -
+                        series.points[0].shapeArgs.innerR -
+                        (
+                            series.points[0].shapeArgs.r -
+                            series.points[0].shapeArgs.innerR
+                        ) / 2 +
+                        8
+                });
+            });
+        }
+
+        // const donutChartColors = Highcharts.getOptions().colors.map(color =>
+        //     new Highcharts.Color(color).setOpacity(0.3).get()
+        // );
+
+        function createChart(chartId, tooltipId, dataValue) {
+            console.log(donutChartColors);
+            Highcharts.chart(chartId, {
+                chart: {
+                    type: 'solidgauge',
+                    height: '100%',
+                    events: {
+                        render: renderIcons,
+                        load: function () {
+                            const tooltip = document.getElementById(tooltipId);
+                            const point = this.series[0].points[0];
+                            tooltip.innerHTML = `<span style="font-size: 2em; color: ${point.color}; font-weight: bold">${point.y}%</span>`;
+                            const bbox = tooltip.getBoundingClientRect();
+                            tooltip.style.left = (this.plotLeft + this.chartWidth / 2 - bbox.width / 2) + 'px';
+                            tooltip.style.top = (this.plotHeight / 2 + this.plotTop - bbox.height / 2) + 'px';
+                            console.log(point.color);
+                        }
+                    }
+                },
+
+                title: {
+                    text: 'Multiple KPI gauge',
+                    style: {
+                        fontSize: '24px'
+                    }
+                },
+
+                pane: {
+                    startAngle: 0,
+                    endAngle: 360,
+                    background: [{ // Track for Engagement
+                        outerRadius: '87%',
+                        innerRadius: '63%',
+                        backgroundColor: donutChartColors[1],
+                        borderWidth: 0
+                    }]
+                },
+
+                yAxis: {
+                    min: 0,
+                    max: 100,
+                    lineWidth: 0,
+                    tickPositions: []
+                },
+
+                plotOptions: {
+                    solidgauge: {
+                        dataLabels: {
+                            enabled: false
+                        },
+                        linecap: 'round',
+                        stickyTracking: false,
+                        rounded: true
+                    }
+                },
+
+                series: [{
+                    name: 'Donut Chart',
+                    data: [{
+                        color: donutChartColors[0],
+                        radius: '87%',
+                        innerRadius: '63%',
+                        y: dataValue
+                    }],
+                    custom: {
+                        icon: 'comments-o',
+                        iconColor: '#ffffff'
+                    }
+                }]
+            });
+        }
+
+        var donutChartColors = ['#0E6C0E', '#B2E2B2'];
+        createChart('with-updated-baseline-donut', 'with-updated-baseline-custom-tooltip', 70);
+        
+        var donutChartColors = ['#BD8719', '#F0D8A8'];
+        createChart('without-updated-baseline-donut', 'without-updated-baseline-custom-tooltip', 80);
+        
+        var donutChartColors = ['#E13E54', '#F4B6BE'];
+        createChart('no-baseline-donut', 'no-baseline-custom-tooltip', 45);
+    </script>
+</body>
+</html>
